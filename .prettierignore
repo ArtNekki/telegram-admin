@@ -1,0 +1,22 @@
+# Node / build
+node_modules
+.build
+dist
+coverage
+.export
+
+# Strapi
+.cache
+.tmp
+public/uploads
+
+# Logs and env
+*.log
+.env
+.env.*
+
+# Docker
+Dockerfile
+Dockerfile.*
+docker-compose.yml
+docker-compose.*.yml

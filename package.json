@@ -9,11 +9,23 @@
     "deploy": "strapi deploy",
     "dev": "strapi develop",
     "develop": "strapi develop",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky",
     "seed:example": "node ./scripts/seed.js",
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
     "upgrade:dry": "npx @strapi/upgrade latest --dry"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@strapi/plugin-cloud": "5.31.0",
@@ -28,9 +40,15 @@
     "styled-components": "^6.0.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
+    "prettier-plugin-organize-imports": "^4.3.0",
+    "prettier-plugin-packagejson": "^2.5.19",
     "typescript": "^5"
   },
   "engines": {
