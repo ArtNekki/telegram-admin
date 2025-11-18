@@ -16,6 +16,9 @@ export default [
 			'src/admin/**',
 			'*.config.*', // ignore tool configs like eslint/prettier/commitlint
 			'scripts/**',
+			'config/env/**', // environment-specific configs (CommonJS)
+			'types/generated/**', // auto-generated types
+			'generate-keys.js', // utility scripts
 		],
 	},
 

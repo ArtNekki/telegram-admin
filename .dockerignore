@@ -1,0 +1,12 @@
+.tmp/
+.cache/
+.git/
+build/
+node_modules/
+.env
+data/
+backup/
+dist
+.strapi
+deploy.log
+known_hosts

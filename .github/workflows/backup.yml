@@ -1,0 +1,81 @@
+name: Upload Backup to S3
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Choose the environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2.7.0
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Check disk space, create and copy backup from Docker container
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            TARGET_CONTAINER="${{ secrets.DOPPLER_PROJECT }}"
+
+            # Checking free space
+            FREE_SPACE=$(df -k /tmp | tail -1 | awk '{print $4}')
+            if [ $FREE_SPACE -lt 1048576 ]; then
+                echo 'Not enough free disk space' >&2
+                exit 1
+            fi
+
+            if ! docker exec "$TARGET_CONTAINER" /bin/sh -c 'strapi export --no-encrypt -f backup_file'; then
+              echo 'Failed to create backup' >&2
+              exit 1
+            fi
+
+            if ! docker cp "$TARGET_CONTAINER:/opt/app/backup_file.tar.gz" ./backup_file.tar.gz; then
+              echo 'Failed to copy file from container' >&2
+              exit 1
+            fi
+          EOF
+
+          scp ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:backup_file.tar.gz ./backup_file.tar.gz
+
+      - name: Install s3cmd
+        run: sudo apt-get install s3cmd
+
+      - name: Configure s3cmd
+        run: |
+          echo "[default]
+          access_key = ${{ secrets.AWS_ACCESS_KEY_ID }}
+          secret_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          host_base = ${{ secrets.S3_URL }}
+          host_bucket = ${{ secrets.S3_URL }}
+          use_https = True
+          signature_v2 = False" > ~/.s3cfg
+
+      - name: Upload file to S3
+        run: |
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          s3cmd put ./backup_file.tar.gz s3://${{ secrets.S3_BUCKET_NAME }}/backup_file_${{ github.event.inputs.environment }}_${TIMESTAMP}.tar.gz
+
+      - name: Delete backup files
+        if: always()
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            TARGET_CONTAINER="${{ secrets.DOPPLER_PROJECT }}"
+            docker exec "$TARGET_CONTAINER" rm -f /opt/app/backup_file.tar.gz
+            rm -f backup_file.tar.gz
+          EOF
+          rm -f ./backup_file.tar.gz
