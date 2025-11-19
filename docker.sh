@@ -8,8 +8,13 @@ source "./logger.sh"
 # Function to display help
 show_help() {
   echo "Usage: ./docker.sh [dev|stage|prod]"
-  echo "  dev - development environment (uses docker-compose.override.yml)"
-  echo "  stage | prod - staging environment (uses docker-compose.yml)"
+  echo ""
+  echo "Environments:"
+  echo "  dev   - Development (uses docker-compose.override.yml with bundled PostgreSQL)"
+  echo "  stage - Staging (uses docker-compose.yml with bundled PostgreSQL)"
+  echo "  prod  - Production (uses docker-compose.prod.yml with external managed DB)"
+  echo ""
+  echo "For production setup with managed database, see DEPLOYMENT.md"
 }
 
 COMPOSE_FILES=()
@@ -92,10 +97,13 @@ if [ "$ENV" = "dev" ]; then
   docker-compose up
 else
   # Determine Docker Compose file
-  COMPOSE_FILES=("-f" "docker-compose.yml")
-  #    if [ "$NODE_ENV" = "production" ] && [ -f docker-compose.prod.yml ]; then
-  #        COMPOSE_FILES+=("-f" "docker-compose.prod.yml")
-  #    fi
+  if [ "$NODE_ENV" = "production" ] && [ -f docker-compose.prod.yml ]; then
+    # Production: use external managed database
+    COMPOSE_FILES=("-f" "docker-compose.prod.yml")
+  else
+    # Staging: use bundled PostgreSQL
+    COMPOSE_FILES=("-f" "docker-compose.yml")
+  fi
   DOCKERFILE="Dockerfile"
 
   if [ ! -f "$DOCKERFILE" ]; then

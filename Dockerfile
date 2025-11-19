@@ -31,6 +31,9 @@ COPY --from=build /opt/node_modules ./node_modules
 WORKDIR ${APP_HOME}
 COPY --from=build /opt/app ./
 
+# Copy SSL certificates for database connections
+COPY --from=build /opt/app/certs ./certs
+
 ENV PATH /opt/node_modules/.bin:$PATH
 
 # Set up permissions

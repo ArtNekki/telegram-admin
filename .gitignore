@@ -78,6 +78,9 @@ $RECYCLE.BIN/
 
 *#
 ssl
+certs/*.crt
+certs/*.pem
+certs/*.key
 .idea
 nbproject
 public/uploads/*
