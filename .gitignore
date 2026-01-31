@@ -85,6 +85,8 @@ certs/*.key
 nbproject
 public/uploads/*
 !public/uploads/.gitkeep
+data/uploads/*
+!data/uploads/.gitkeep
 .tsbuildinfo
 .eslintcache
 
