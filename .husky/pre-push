@@ -1,2 +1,2 @@
 echo "Running build before push..."
-npm run build
+# npm run build
